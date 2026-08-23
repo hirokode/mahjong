@@ -33,6 +33,13 @@ body{
   padding-bottom:env(safe-area-inset-bottom);
 }
 .wrap{max-width:520px;margin:0 auto;padding:0 14px 56px;}
+.nav{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:12px 0 2px;}
+.nav a{
+  display:flex;align-items:center;justify-content:center;min-height:44px;border-radius:8px;
+  text-decoration:none;font-size:14px;font-weight:700;letter-spacing:.06em;
+  border:2px solid var(--line);color:var(--ivory-dim);
+}
+.nav a[aria-current="page"]{background:var(--ivory);color:#16352c;border-color:var(--ivory);}
 
 /* ---- ヘッダ ---- */
 .masthead{
@@ -183,6 +190,11 @@ details[open] summary::after{transform:rotate(180deg);}
 </head>
 <body>
 <div class="wrap">
+
+  <nav class="nav">
+    <a href="./" aria-current="page">点数計算</a>
+    <a href="index_score.html">スコア記録</a>
+  </nav>
 
   <div class="masthead">
     <h1>麻雀 点数計算</h1>
