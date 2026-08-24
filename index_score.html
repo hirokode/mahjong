@@ -97,14 +97,25 @@ input::placeholder{color:rgba(244,239,227,.26);font-weight:600;}
 .plus{color:#1f7a52;}.minus{color:#c0392b;}
 .board .bf{font-size:11.5px;color:#4b6b5f;font-weight:600;padding-top:9px;text-align:center;}
 
-.hrow{display:flex;align-items:center;gap:8px;padding:11px 4px;border-bottom:1px solid var(--line);
-  font-variant-numeric:tabular-nums;cursor:pointer;border-radius:7px;}
+.hrow{display:block;padding:11px 8px;border-bottom:1px solid var(--line);cursor:pointer;border-radius:8px;}
 .hrow:active{background:rgba(244,239,227,.07);}
-.hrow .hn{width:32px;flex:none;font-size:12px;font-weight:700;color:var(--ivory-dim);}
-.hrow .hc{flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:3px 12px;font-size:13.5px;font-weight:700;}
-.hrow .hg{font-size:16px;color:rgba(244,239,227,.3);}
-.hbadge{display:inline-block;font-size:10px;font-weight:700;padding:1px 6px;border-radius:99px;
-  background:rgba(227,178,90,.2);color:var(--gold);margin-left:4px;}
+.htop{display:flex;align-items:center;gap:7px;margin-bottom:8px;}
+.hn{font-size:12px;font-weight:700;color:var(--ivory-dim);font-variant-numeric:tabular-nums;}
+.hg{margin-left:auto;font-size:17px;color:rgba(244,239,227,.3);}
+.hc{display:grid;gap:6px;}
+.hp{text-align:center;background:rgba(0,0,0,.2);border-radius:7px;padding:7px 4px;min-width:0;}
+.hpn{display:block;font-size:11px;font-weight:700;color:var(--ivory-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.hpp{display:block;font-size:16px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.25;}
+.hpy{display:block;font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;opacity:.72;}
+.hbadge{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;
+  background:rgba(227,178,90,.18);color:var(--gold);}
+
+.ratebar{display:flex;gap:6px;overflow-x:auto;padding:2px 0 8px;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.ratebar::-webkit-scrollbar{display:none;}
+.rchip{flex:none;min-height:42px;padding:0 15px;border-radius:99px;border:2px solid var(--line-strong);
+  background:transparent;color:var(--ivory);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;
+  transition:background .12s,color .12s,border-color .12s;}
+.rchip[aria-pressed="true"]{background:var(--ivory);color:#16352c;border-color:var(--ivory);}
 
 details{margin-top:22px;border-top:1px solid var(--line);}
 summary{list-style:none;cursor:pointer;padding:15px 2px;font-size:12px;font-weight:700;letter-spacing:.16em;color:var(--ivory-dim);display:flex;align-items:center;justify-content:space-between;}
@@ -220,7 +231,8 @@ details[open] summary::after{transform:rotate(180deg);}
 
   <section>
     <p class="lbl">半荘入力</p>
-    <p class="note" id="ruleTag" style="margin:-4px 0 11px"></p>
+    <div class="ratebar" id="rateBar"></div>
+    <p class="note" id="ruleTag" style="margin:0 0 11px"></p>
     <div id="scoreFields"></div>
     <div class="sumbar"><span>素点合計</span><span id="sumInfo">—</span></div>
     <div style="margin-top:15px">
@@ -536,6 +548,7 @@ function renderInputs(){
   $("scoreFields").innerHTML=h;
   document.querySelectorAll("#scoreFields input").forEach(function(el){el.addEventListener("input",validateInput);});
   $("ruleTag").textContent=ruleText(D.rule,D.players.length);
+  renderRateBar();
 
   var s="";D.players.forEach(function(n,i){s+='<button class="btn" data-v="'+i+'">'+esc(n)+'</button>';});
   s+='<button class="btn" data-v="none">無し</button>';
@@ -547,6 +560,29 @@ function renderInputs(){
   press("gPayer",pendPayer===null?"x":pendPayer);
   $("fFee").value=(D.fee&&D.fee.total)?D.fee.total:"";
 }
+function renderRateBar(){
+  var h="";
+  allRate().forEach(function(x){
+    h+='<button class="rchip" data-v="'+esc(x[0])+'">'+esc(x[0])+'</button>';
+  });
+  var bar=$("rateBar");bar.innerHTML=h;
+  bar.querySelectorAll(".rchip").forEach(function(b){
+    b.setAttribute("aria-pressed",b.dataset.v===D.rule.rateLabel?"true":"false");
+  });
+  var sel=bar.querySelector('.rchip[aria-pressed="true"]');
+  if(sel) bar.scrollLeft=Math.max(0,sel.offsetLeft-bar.clientWidth/2+sel.offsetWidth/2);
+}
+$("rateBar").addEventListener("click",function(e){
+  var b=e.target.closest(".rchip");if(!b)return;
+  var rt=allRate().filter(function(x){return x[0]===b.dataset.v;})[0];
+  if(!rt)return;
+  D.rule.rateLabel=rt[0];D.rule.yen=rt[1];
+  store.save(D);
+  $("ruleTag").textContent=ruleText(D.rule,D.players.length);
+  renderRateBar();renderAll();
+  toast("レートを「"+rt[0]+"」に変更（次の半荘から）");
+});
+
 function readScores(sel){
   var v=[];document.querySelectorAll(sel+" input").forEach(function(el){v.push(el.value===""?null:Number(el.value));});
   return v;
@@ -604,16 +640,33 @@ $("bFee").addEventListener("click",function(){
   store.save(D);renderAll();toast("場代を反映しました");
 });
 
+function rateRangeText(){
+  if(D.games.length===0) return D.rule.rateLabel;
+  var seen={},list=[];
+  D.games.forEach(function(g){
+    var l=g.rule.rateLabel;
+    if(!seen[l]){seen[l]=true;list.push([l,g.rule.yen]);}
+  });
+  if(list.length===1) return list[0][0];
+  list.sort(function(a,b){return a[1]-b[1];});
+  return list[0][0]+"〜"+list[list.length-1][0];
+}
 function renderAll(){
   var t=totals(),r=D.rule,n=D.players.length;
-  var h='<div class="bh"><span>本日の成績　'+D.games.length+'半荘</span><span>'+esc(r.rateLabel)+'</span></div>';
+  var hasMoney=r.yen>0||D.games.some(function(g){return g.rule.yen>0;});
+  var h='<div class="bh"><span>本日の成績　'+D.games.length+'半荘</span><span>'+esc(rateRangeText())+'</span></div>';
   if(D.games.length===0){
     h+='<div style="padding:22px 0;text-align:center;font-size:14px;font-weight:700;color:#7d9188">まだ記録がありません</div>';
   }else{
     t.forEach(function(x,k){
       h+='<div class="brow"><span class="rk'+(k===0?" top":"")+'">'+(k+1)+'</span><span class="nm">'+esc(x.name)+
-         '</span><span class="vals"><span class="pt '+(x.p>=0?"plus":"minus")+'">'+pt(x.p)+'<span style="font-size:12px">P</span></span>';
-      if(r.yen) h+='<br><span class="yen '+(x.net>=0?"plus":"minus")+'">'+yen(x.net)+'円</span>';
+         '</span><span class="vals">';
+      if(hasMoney){
+        h+='<span class="pt '+(x.net>=0?"plus":"minus")+'">'+yen(x.net)+'<span style="font-size:12px">円</span></span>'+
+           '<br><span class="yen">'+pt(x.p)+'P</span>';
+      }else{
+        h+='<span class="pt '+(x.p>=0?"plus":"minus")+'">'+pt(x.p)+'<span style="font-size:12px">P</span></span>';
+      }
       h+='</span></div>';
     });
     var foot=[];
@@ -627,14 +680,25 @@ function renderAll(){
   var hh="";
   for(var i=D.games.length-1;i>=0;i--){
     var g=D.games[i];
-    hh+='<div class="hrow" data-i="'+i+'"><span class="hn">#'+(i+1)+'</span><span class="hc">';
-    g.pts.forEach(function(p,k){
-      hh+='<span>'+esc(D.players[k])+' <span style="color:'+(p>=0?"#5fc79a":"#e8776d")+'">'+pt(p)+'</span></span>';
-    });
+    hh+='<div class="hrow" data-i="'+i+'"><div class="htop"><span class="hn">#'+(i+1)+'</span>'+
+        '<span class="hbadge">'+esc(g.rule.rateLabel)+'</span>';
     if(g.shooter!==null&&g.shooter!==undefined) hh+='<span class="hbadge">飛 '+esc(D.players[g.shooter])+'</span>';
-    if(Math.abs(g.pointError||0)>0.001) hh+='<span class="hbadge">誤差'+pt(g.pointError)+'</span>';
+    if(Math.abs(g.pointError||0)>0.001) hh+='<span class="hbadge">誤差 '+pt(g.pointError)+'</span>';
     if(g.memo) hh+='<span class="hbadge">'+esc(g.memo)+'</span>';
-    hh+='</span><span class="hg">›</span></div>';
+    hh+='<span class="hg">›</span></div>';
+    hh+='<div class="hc" style="grid-template-columns:repeat('+D.players.length+',1fr)">';
+    g.pts.forEach(function(p,k){
+      var c=p>=0?"#5fc79a":"#e8776d";
+      hh+='<div class="hp"><span class="hpn">'+esc(D.players[k])+'</span>';
+      if(g.rule.yen){
+        hh+='<span class="hpp" style="color:'+c+'">'+yen(g.settle[k])+'</span>'+
+            '<span class="hpy">'+pt(p)+'P</span>';
+      }else{
+        hh+='<span class="hpp" style="color:'+c+'">'+pt(p)+'</span><span class="hpy">P</span>';
+      }
+      hh+='</div>';
+    });
+    hh+='</div></div>';
   }
   $("hist").innerHTML=hh;
   $("histSec").classList.toggle("hide",D.games.length===0);
@@ -699,11 +763,12 @@ $("mDelete").addEventListener("click",function(){
 /* ===== その他 ===== */
 $("bCopy").addEventListener("click",function(){
   var t=totals(),r=D.rule;
-  var s=D.date+" 麻雀スコア（"+D.players.length+"人・"+r.rateLabel+"）\n"+
+  var hasMoney=r.yen>0||D.games.some(function(g){return g.rule.yen>0;});
+  var s=D.date+" 麻雀スコア（"+D.players.length+"人・"+rateRangeText()+"）\n"+
         "ウマ "+r.umaLabel+" ／ トビ賞 "+r.tobiLabel+"\n全"+D.games.length+"半荘\n\n";
   t.forEach(function(x,k){
-    s+=(k+1)+"位 "+x.name+" "+pt(x.p)+"P";
-    if(r.yen) s+=" ("+yen(x.net)+"円)";
+    s+=(k+1)+"位 "+x.name+" ";
+    s+=hasMoney?(yen(x.net)+"円（"+pt(x.p)+"P）"):(pt(x.p)+"P");
     s+="\n";
   });
   if(D.fee&&D.fee.total>0) s+="\n※場代"+D.fee.total.toLocaleString()+"円込み";
