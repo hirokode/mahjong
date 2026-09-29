@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <radialGradient id="felt" cx="50%" cy="42%" r="70%">
+      <stop offset="0" stop-color="#245043"/>
+      <stop offset="1" stop-color="#12312a"/>
+    </radialGradient>
+    <linearGradient id="face" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fbf7ec"/>
+      <stop offset="1" stop-color="#e8e0cc"/>
+    </linearGradient>
+    <linearGradient id="back" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3d9b74"/>
+      <stop offset="1" stop-color="#2a7556"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#felt)"/>
+  <!-- tile shadow -->
+  <rect x="152" y="112" width="220" height="300" rx="30" fill="#000" opacity=".28"/>
+  <!-- tile back (green) -->
+  <rect x="146" y="118" width="220" height="300" rx="30" fill="url(#back)"/>
+  <!-- tile face -->
+  <rect x="146" y="96" width="220" height="300" rx="30" fill="url(#face)"/>
+  <rect x="160" y="110" width="192" height="272" rx="20" fill="none" stroke="#d9d0b9" stroke-width="3"/>
+  <!-- 中 -->
+  <g fill="#cd3b30">
+    <path fill-rule="evenodd" d="M198 202h116a10 10 0 0 1 10 10v74a10 10 0 0 1-10 10H198a10 10 0 0 1-10-10v-74a10 10 0 0 1 10-10zM213 226v46h86v-46z"/>
+    <rect x="244" y="138" width="24" height="218" rx="10"/>
+  </g>
+</svg>
