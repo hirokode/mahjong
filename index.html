@@ -35,8 +35,11 @@ body{
   font-size:16px;
   line-height:1.5;
   -webkit-text-size-adjust:100%;
+  padding-top:env(safe-area-inset-top);
   padding-bottom:env(safe-area-inset-bottom);
 }
+/* iPhone のステータスバー下にコンテンツが潜り込まないよう覆う */
+body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--felt);z-index:100;pointer-events:none;}
 .wrap{max-width:520px;margin:0 auto;padding:0 14px 56px;}
 .nav{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:12px 0 2px;}
 .nav a{
@@ -57,7 +60,7 @@ body{
 .masthead .sub{font-size:11px;color:var(--ivory-dim);letter-spacing:.1em;}
 
 /* ---- 結果（牌モチーフ）---- */
-.result-dock{position:sticky;top:0;z-index:20;padding:6px 0 12px;background:linear-gradient(var(--felt) 74%,transparent);}
+.result-dock{position:sticky;top:env(safe-area-inset-top);z-index:20;padding:6px 0 12px;background:linear-gradient(var(--felt) 74%,transparent);}
 .tile-face{
   background:var(--ivory);
   color:#16352c;

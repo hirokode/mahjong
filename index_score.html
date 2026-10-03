@@ -24,8 +24,11 @@ body{
   background:var(--felt);color:var(--ivory);
   font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic Medium","Yu Gothic","Noto Sans JP","Meiryo",sans-serif;
   font-size:16px;line-height:1.5;-webkit-text-size-adjust:100%;
+  padding-top:env(safe-area-inset-top);
   padding-bottom:env(safe-area-inset-bottom);
 }
+/* iPhone のステータスバー下にコンテンツが潜り込まないよう覆う */
+body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--felt);z-index:100;pointer-events:none;}
 .wrap{max-width:520px;margin:0 auto;padding:0 14px 60px;}
 .nav{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:12px 0 2px;}
 .nav a{
@@ -139,11 +142,11 @@ details[open] summary::after{transform:rotate(180deg);}
 .chip button{width:26px;height:26px;border:0;border-radius:50%;background:rgba(205,59,48,.18);
   color:var(--vermilion);font-size:15px;font-weight:800;cursor:pointer;line-height:1;}
 
-.modal{position:fixed;inset:0;background:rgba(6,20,16,.86);z-index:50;overflow-y:auto;padding:20px 14px 40px;}
+.modal{position:fixed;inset:0;background:rgba(6,20,16,.86);z-index:50;overflow-y:auto;padding:calc(20px + env(safe-area-inset-top)) 14px calc(40px + env(safe-area-inset-bottom));}
 .msheet{max-width:520px;margin:0 auto;background:var(--felt);border:2px solid var(--line-strong);border-radius:14px;padding:16px;}
 .msheet h3{margin:0 0 14px;font-size:16px;font-weight:800;letter-spacing:.06em;}
 
-.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);
+.toast{position:fixed;left:50%;bottom:calc(26px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);
   background:var(--ivory);color:#16352c;padding:12px 22px;border-radius:99px;font-size:14px;font-weight:800;
   opacity:0;pointer-events:none;transition:all .22s;z-index:60;box-shadow:0 6px 20px rgba(0,0,0,.4);}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
