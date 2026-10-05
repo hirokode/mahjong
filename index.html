@@ -5,213 +5,93 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#12312a">
+<meta name="theme-color" content="#1e473c">
 <meta name="apple-mobile-web-app-title" content="麻雀">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
 <title>麻雀 点数計算</title>
+<link rel="stylesheet" href="app.css">
 <style>
-:root{
-  --felt:#12312a;
-  --felt-2:#1b4238;
-  --felt-3:#245043;
-  --ivory:#f4efe3;
-  --ivory-dim:#b9b3a3;
-  --jade:#3d9b74;
-  --vermilion:#cd3b30;
-  --gold:#e3b25a;
-  --line:rgba(244,239,227,.14);
-  --line-strong:rgba(244,239,227,.3);
-  --tap:56px;
-}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-html,body{margin:0;padding:0;}
-body{
-  background:var(--felt);
-  color:var(--ivory);
-  font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic Medium","Yu Gothic","Noto Sans JP","Meiryo",sans-serif;
-  font-size:16px;
-  line-height:1.5;
-  -webkit-text-size-adjust:100%;
-  padding-top:env(safe-area-inset-top);
-  padding-bottom:env(safe-area-inset-bottom);
-}
-/* iPhone のステータスバー下にコンテンツが潜り込まないよう覆う */
-body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--felt);z-index:100;pointer-events:none;}
-.wrap{max-width:520px;margin:0 auto;padding:0 14px 56px;}
-.nav{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:12px 0 2px;}
-.nav a{
-  display:flex;align-items:center;justify-content:center;min-height:44px;border-radius:8px;
-  text-decoration:none;font-size:14px;font-weight:700;letter-spacing:.06em;
-  border:2px solid var(--line);color:var(--ivory-dim);
-}
-.nav a[aria-current="page"]{background:var(--ivory);color:#16352c;border-color:var(--ivory);}
-
-/* ---- ヘッダ ---- */
-.masthead{
-  padding:18px 2px 12px;
-  display:flex;align-items:baseline;justify-content:space-between;gap:10px;
-}
-.masthead h1{
-  margin:0;font-size:17px;font-weight:700;letter-spacing:.14em;
-}
-.masthead .sub{font-size:11px;color:var(--ivory-dim);letter-spacing:.1em;}
-
-/* ---- 結果（牌モチーフ）---- */
-.result-dock{position:sticky;top:env(safe-area-inset-top);z-index:20;padding:6px 0 12px;background:linear-gradient(var(--felt) 74%,transparent);}
-.tile-face{
-  background:var(--ivory);
-  color:#16352c;
-  border-radius:11px 11px 7px 7px;
-  border-bottom:6px solid #2b7a5c;
-  box-shadow:0 6px 18px rgba(0,0,0,.34);
-  padding:13px 16px 14px;
-  text-align:center;
-}
-.res-meta{
-  display:flex;justify-content:center;gap:14px;
-  font-size:12.5px;font-weight:600;color:#4b6b5f;letter-spacing:.06em;
-}
-.res-meta b{font-weight:700;color:#16352c;font-size:15px;}
-.res-main{
-  font-size:46px;font-weight:800;line-height:1.05;margin:4px 0 2px;
-  font-variant-numeric:tabular-nums;letter-spacing:-.02em;
-}
-.res-main .yen{font-size:19px;font-weight:700;margin-left:3px;}
-.res-split{font-size:14.5px;font-weight:700;color:#2b6a51;font-variant-numeric:tabular-nums;}
-.res-rank{
-  display:inline-block;margin-top:7px;padding:2px 12px;border-radius:99px;
-  background:#16352c;color:var(--gold);font-size:12px;font-weight:700;letter-spacing:.18em;
-}
+/* ---- 結果カード ---- */
+.result-dock{position:sticky;top:env(safe-area-inset-top);z-index:20;padding:8px 0 14px;background:linear-gradient(var(--bg) 78%,rgba(30,71,60,0));}
+.tile-face{background:var(--ivory);color:var(--ink);border-radius:20px;padding:14px 18px 16px;text-align:center;}
+.res-meta{display:flex;justify-content:center;gap:16px;font-size:12.5px;font-weight:600;color:#5b7a6f;}
+.res-meta b{font-weight:800;color:var(--ink);font-size:15px;margin-left:2px;}
+.res-main{font-size:46px;font-weight:800;line-height:1.05;margin:4px 0 2px;font-variant-numeric:tabular-nums;letter-spacing:-.02em;}
+.res-main .yen{font-size:18px;font-weight:700;margin-left:3px;}
+.res-split{font-size:14px;font-weight:700;color:#2f7458;font-variant-numeric:tabular-nums;}
+.res-rank{display:inline-block;margin-top:8px;padding:3px 12px;border-radius:99px;background:var(--ink);color:var(--gold);font-size:12px;font-weight:700;letter-spacing:.12em;}
 .res-rank.empty{display:none;}
-.res-warn{margin-top:8px;font-size:12px;color:var(--vermilion);font-weight:700;}
+.res-warn{margin-top:8px;font-size:12px;color:#c0392b;font-weight:700;}
 
-/* ---- セクション ---- */
-section{margin-top:22px;}
-.lbl{
-  font-size:12px;font-weight:700;letter-spacing:.16em;color:var(--ivory-dim);
-  margin:0 0 8px 2px;display:flex;align-items:center;gap:8px;
-}
-.lbl::after{content:"";flex:1;height:1px;background:var(--line);}
-.note{font-size:11.5px;color:var(--ivory-dim);margin:8px 2px 0;line-height:1.55;}
-
-/* ---- ボタン共通 ---- */
 .row{display:grid;gap:8px;}
+#gHanMore{display:grid;grid-template-columns:repeat(5,1fr);}
+#gHanMore.hide{display:none;}
+#gHanMore .btn{flex-direction:column;gap:0;padding:6px 2px;min-height:52px;justify-content:center;line-height:1.2;}
+#gHanMore .btn small{font-size:10px;}
 .row.c2{grid-template-columns:1fr 1fr;}
-.row.c3{grid-template-columns:repeat(3,1fr);}
-.row.c4{grid-template-columns:repeat(4,1fr);}
-.btn{
-  min-height:var(--tap);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  border:2px solid var(--line-strong);border-radius:9px;
-  background:transparent;color:var(--ivory);
-  font-family:inherit;font-size:17px;font-weight:700;letter-spacing:.04em;
-  cursor:pointer;transition:background .12s,color .12s,border-color .12s,transform .08s;
-  font-variant-numeric:tabular-nums;
-}
-.btn small{font-size:10.5px;font-weight:600;opacity:.6;letter-spacing:.04em;margin-top:2px;}
-.btn:active{transform:scale(.97);}
-.btn[aria-pressed="true"]{
-  background:var(--ivory);color:#16352c;border-color:var(--ivory);
-  box-shadow:0 2px 0 #2b7a5c inset,0 3px 9px rgba(0,0,0,.25);
-}
-.btn[aria-pressed="true"] small{opacity:.62;}
-.btn:disabled{opacity:.26;cursor:not-allowed;}
-.btn:focus-visible{outline:3px solid var(--gold);outline-offset:2px;}
 
-/* 翻グリッド */
-.han-grid .btn{min-height:52px;font-size:19px;}
-.btn.yakuman{grid-column:span 2;color:var(--gold);border-color:rgba(227,178,90,.5);}
-.btn.yakuman[aria-pressed="true"]{background:var(--gold);color:#16352c;border-color:var(--gold);}
-
-/* ---- チェック ---- */
+/* ---- スイッチ ---- */
 .check{
-  display:flex;align-items:center;gap:12px;
-  min-height:60px;padding:0 14px;
-  border:2px solid var(--line-strong);border-radius:9px;
-  background:transparent;color:var(--ivory);
-  font-family:inherit;font-size:16.5px;font-weight:700;
-  cursor:pointer;width:100%;text-align:left;transition:border-color .12s,background .12s;
+  display:flex;align-items:center;gap:10px;width:100%;min-height:62px;padding:8px 12px 8px 16px;
+  border:0;border-radius:var(--radius);background:var(--surface);color:var(--ivory);
+  font-family:inherit;font-size:16px;font-weight:700;text-align:left;cursor:pointer;
 }
-.check .box{
-  width:30px;height:30px;flex:none;border:2.5px solid var(--line-strong);border-radius:6px;
-  display:flex;align-items:center;justify-content:center;transition:all .12s;
-}
-.check .box svg{width:20px;height:20px;opacity:0;transform:scale(.6);transition:all .14s;}
-.check[aria-pressed="true"]{border-color:var(--ivory);background:rgba(244,239,227,.09);}
-.check[aria-pressed="true"] .box{background:var(--ivory);border-color:var(--ivory);}
-.check[aria-pressed="true"] .box svg{opacity:1;transform:scale(1);stroke:#16352c;}
-.check:disabled{opacity:.26;cursor:not-allowed;}
-.check:focus-visible{outline:3px solid var(--gold);outline-offset:2px;}
+.check .txt{flex:1;min-width:0;}
 .check .cap{font-size:11px;font-weight:600;color:var(--ivory-dim);display:block;margin-top:1px;}
+.check .sw{position:relative;flex:none;width:46px;height:28px;border-radius:99px;background:rgba(255,255,255,.18);transition:background .18s;}
+.check .sw::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform .18s;}
+.check[aria-pressed="true"] .sw{background:var(--jade);}
+.check[aria-pressed="true"] .sw::after{transform:translateX(18px);}
+.check:disabled{opacity:.3;cursor:not-allowed;}
+.check:focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
 
 /* ---- カウンタ ---- */
-.counter{
-  display:flex;align-items:center;gap:10px;
-  padding:7px 0;border-bottom:1px solid var(--line);
-}
+.counters{background:var(--surface);border-radius:var(--radius);padding:2px 12px 2px 16px;}
+.counter{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);}
 .counter:last-child{border-bottom:0;}
-.counter .cname{flex:1;min-width:0;font-size:16px;font-weight:700;}
-.counter .cfu{font-size:11.5px;font-weight:600;color:var(--ivory-dim);margin-left:7px;letter-spacing:.02em;}
-.counter .num{
-  width:34px;text-align:center;font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;
-}
-.counter .num.zero{color:rgba(244,239,227,.28);}
+.counter .cname{flex:1;min-width:0;font-size:15.5px;font-weight:700;}
+.counter .cfu{font-size:11.5px;font-weight:600;color:var(--ivory-dim);margin-left:6px;}
+.counter .num{width:30px;text-align:center;font-size:20px;font-weight:800;font-variant-numeric:tabular-nums;}
+.counter .num.zero{color:rgba(246,242,232,.28);}
 .step{
-  width:50px;height:50px;flex:none;border-radius:9px;
-  border:2px solid var(--line-strong);background:transparent;color:var(--ivory);
-  font-size:26px;font-weight:700;line-height:1;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;padding:0;
-  transition:background .12s,transform .08s;
+  width:44px;height:44px;flex:none;border-radius:50%;border:0;background:var(--surface-2);color:var(--ivory);
+  font-size:22px;font-weight:600;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;
+  transition:background .12s;
 }
-.step:active{transform:scale(.93);background:rgba(244,239,227,.14);}
-.step:disabled{opacity:.22;cursor:not-allowed;}
-.step:focus-visible{outline:3px solid var(--gold);outline-offset:2px;}
-.counter.off{opacity:.28;}
+.step:active{background:rgba(255,255,255,.22);}
+.step:disabled{opacity:.25;cursor:not-allowed;}
+.step:focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+.counter.off{opacity:.3;}
 
 /* ---- 内訳 ---- */
-details{margin-top:22px;border-top:1px solid var(--line);}
-summary{
-  list-style:none;cursor:pointer;padding:15px 2px;
-  font-size:12px;font-weight:700;letter-spacing:.16em;color:var(--ivory-dim);
-  display:flex;align-items:center;justify-content:space-between;
-}
-summary::-webkit-details-marker{display:none;}
-summary::after{content:"▾";font-size:13px;transition:transform .2s;}
-details[open] summary::after{transform:rotate(180deg);}
-.bd{font-size:14px;padding:0 2px 6px;}
-.bd .r{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--line);font-variant-numeric:tabular-nums;}
-.bd .r.sum{border-bottom:0;border-top:2px solid var(--line-strong);margin-top:4px;font-weight:800;color:var(--gold);}
+.bd{font-size:14px;padding:0 16px 10px;}
+.bd .r{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;}
+.bd .r:last-child{border-bottom:0;}
+.bd .r.sum{font-weight:800;color:var(--gold);}
 .bd .r span:last-child{font-weight:700;}
+.opts{padding:0 10px 12px;display:grid;gap:8px;}
+.opts .check{background:var(--surface);}
 
 .reset{
-  margin-top:26px;width:100%;min-height:50px;border-radius:9px;
-  border:2px solid var(--line);background:transparent;color:var(--ivory-dim);
-  font-family:inherit;font-size:14px;font-weight:700;letter-spacing:.1em;cursor:pointer;
+  margin-top:24px;width:100%;min-height:50px;border-radius:var(--radius);border:0;background:transparent;
+  color:var(--ivory-dim);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;
 }
-.reset:active{background:rgba(244,239,227,.08);}
-
-@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;}}
+.reset:active{background:var(--surface);}
 </style>
 </head>
 <body>
 <div class="wrap">
 
-  <nav class="nav">
-    <a href="./" aria-current="page">点数計算</a>
-    <a href="index_score.html">スコア記録</a>
-  </nav>
-
   <div class="masthead">
-    <h1>麻雀 点数計算</h1>
-    <span class="sub">SCORE CALCULATOR</span>
+    <h1>点数計算</h1>
   </div>
 
   <div class="result-dock">
     <div class="tile-face">
-      <div class="res-meta"><span>符 <b id="oFu">30</b></span><span>翻 <b id="oHan">1</b></span></div>
+      <div class="res-meta"><span>符<b id="oFu">30</b></span><span>翻<b id="oHan">1</b></span></div>
       <div class="res-main"><span id="oMain">1000</span><span class="yen">点</span></div>
       <div class="res-split" id="oSplit">放銃者から</div>
       <div class="res-rank empty" id="oRank"></div>
@@ -219,17 +99,17 @@ details[open] summary::after{transform:rotate(180deg);}
     </div>
   </div>
 
-  <section>
+  <section style="margin-top:12px">
     <p class="lbl">和了者</p>
-    <div class="row c2" id="gSeat">
-      <button class="btn" data-v="dealer">親<small>親</small></button>
-      <button class="btn" data-v="child">子<small>子</small></button>
+    <div class="seg" id="gSeat">
+      <button class="btn" data-v="dealer">親</button>
+      <button class="btn" data-v="child">子</button>
     </div>
   </section>
 
   <section>
     <p class="lbl">和了り方</p>
-    <div class="row c2" id="gWin">
+    <div class="seg" id="gWin">
       <button class="btn" data-v="ron">ロン</button>
       <button class="btn" data-v="tsumo">ツモ</button>
     </div>
@@ -237,7 +117,7 @@ details[open] summary::after{transform:rotate(180deg);}
 
   <section>
     <p class="lbl">手の状態</p>
-    <div class="row c2" id="gOpen">
+    <div class="seg" id="gOpen">
       <button class="btn" data-v="closed">門前<small>鳴きなし</small></button>
       <button class="btn" data-v="open">副露<small>鳴きあり</small></button>
     </div>
@@ -245,8 +125,9 @@ details[open] summary::after{transform:rotate(180deg);}
 
   <section>
     <p class="lbl">翻数</p>
-    <div class="row c4 han-grid" id="gHan"></div>
-    <div class="row c4" id="gYmul" style="margin-top:8px;display:none">
+    <div class="seg" id="gHan"></div>
+    <div class="chips hide" id="gHanMore"></div>
+    <div class="seg" id="gYmul" style="margin-top:8px;display:none">
       <button class="btn" data-v="1">×1</button>
       <button class="btn" data-v="2">×2<small>ダブル</small></button>
       <button class="btn" data-v="3">×3<small>トリプル</small></button>
@@ -257,20 +138,20 @@ details[open] summary::after{transform:rotate(180deg);}
   <section>
     <p class="lbl">特殊形</p>
     <div class="row c2">
-      <button class="check" id="cPinfu"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><span>平和<span class="cap">門前限定</span></span></button>
-      <button class="check" id="cChiitoi"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><span>七対子<span class="cap">25符固定</span></span></button>
+      <button class="check" id="cPinfu"><span class="txt">平和<span class="cap">門前限定</span></span><span class="sw"></span></button>
+      <button class="check" id="cChiitoi"><span class="txt">七対子<span class="cap">25符固定</span></span><span class="sw"></span></button>
     </div>
   </section>
 
   <section id="secFu">
     <p class="lbl">刻子・槓子の数</p>
-    <div id="gMelds"></div>
+    <div class="counters" id="gMelds"></div>
     <p class="note">中張＝2〜8の数牌／么九＝1・9・字牌。ロンで完成した刻子は<b>明刻</b>として数えます。</p>
   </section>
 
   <section id="secPair">
     <p class="lbl">雀頭</p>
-    <div class="row c3" id="gPair">
+    <div class="seg" id="gPair">
       <button class="btn" data-v="0">その他<small>0符</small></button>
       <button class="btn" data-v="2">役牌<small>2符</small></button>
       <button class="btn" data-v="4">連風牌<small>4符</small></button>
@@ -279,7 +160,7 @@ details[open] summary::after{transform:rotate(180deg);}
 
   <section id="secWait">
     <p class="lbl">待ちの形</p>
-    <div class="row c2" id="gWait">
+    <div class="seg" id="gWait">
       <button class="btn" data-v="0">両面・双碰<small>0符</small></button>
       <button class="btn" data-v="2">辺張・嵌張・単騎<small>2符</small></button>
     </div>
@@ -292,14 +173,19 @@ details[open] summary::after{transform:rotate(180deg);}
 
   <details>
     <summary>ルール設定</summary>
-    <div style="padding-bottom:12px;display:grid;gap:8px">
-      <button class="check" id="cKiriage"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><span>切り上げ満貫<span class="cap">4翻30符・3翻60符を満貫に</span></span></button>
-      <button class="check" id="cDblWind"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><span>連風牌の雀頭を2符<span class="cap">オフなら4符</span></span></button>
+    <div class="opts">
+      <button class="check" id="cKiriage"><span class="txt">切り上げ満貫<span class="cap">4翻30符・3翻60符を満貫に</span></span><span class="sw"></span></button>
+      <button class="check" id="cDblWind"><span class="txt">連風牌の雀頭を2符<span class="cap">オフなら4符</span></span><span class="sw"></span></button>
     </div>
   </details>
 
   <button class="reset" id="bReset">入力をリセット</button>
 </div>
+
+<nav class="tabbar" aria-label="画面切り替え">
+  <a href="./" aria-current="page"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M8.5 7h7M8.5 11.5h.01M12 11.5h.01M15.5 11.5h.01M8.5 15h.01M12 15h.01M15.5 15h.01M8.5 18h.01M12 18h.01M15.5 18h.01"/></svg>点数計算</a>
+  <a href="index_score.html"><svg viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>スコア記録</a>
+</nav>
 
 <script>
 (function(){
@@ -323,6 +209,8 @@ function fresh(){
 }
 var S=fresh();
 var OPT={kiriage:false,dblWind2:false};
+var hanMore=false;
+var HAN_RANK={5:"満貫",6:"跳満",7:"跳満",8:"倍満",9:"倍満",10:"倍満",11:"三倍満",12:"三倍満",13:"数え役満"};
 
 /* ---------- 符 ---------- */
 function calcFu(){
@@ -381,10 +269,14 @@ function calcScore(fu){
 
 /* ---------- 描画 ---------- */
 function build(){
-  var g=document.getElementById("gHan"),h="";
-  for(var i=1;i<=12;i++) h+='<button class="btn" data-v="'+i+'">'+i+'</button>';
-  h+='<button class="btn yakuman" data-v="Y">役満</button>';
-  g.innerHTML=h;
+  var h="";
+  for(var i=1;i<=4;i++) h+='<button class="btn" data-v="'+i+'">'+i+'</button>';
+  h+='<button class="btn more" id="bHanMore" aria-expanded="false"><span>5〜</span></button>';
+  document.getElementById("gHan").innerHTML=h;
+  h="";
+  for(var j=5;j<=13;j++) h+='<button class="btn" data-v="'+j+'">'+(j===13?"13+":j)+'<small>'+HAN_RANK[j]+'</small></button>';
+  h+='<button class="btn" data-v="Y">役満</button>';
+  document.getElementById("gHanMore").innerHTML=h;
 
   var m=document.getElementById("gMelds"),s="";
   MELDS.forEach(function(x){
@@ -409,6 +301,13 @@ function render(){
   pressGroup("gWin",S.win);
   pressGroup("gOpen",S.open);
   pressGroup("gHan",S.yakuman?"Y":S.han);
+  pressGroup("gHanMore",S.yakuman?"Y":S.han);
+  var hm=document.getElementById("bHanMore"),big=S.yakuman||S.han>=5;
+  hm.setAttribute("aria-pressed",big?"true":"false");
+  hm.setAttribute("aria-expanded",hanMore?"true":"false");
+  hm.classList.toggle("open",hanMore);
+  hm.firstChild.textContent=S.yakuman?"役満":big?(S.han>=13?"13+":S.han)+"翻":"5〜";
+  document.getElementById("gHanMore").classList.toggle("hide",!hanMore);
   pressGroup("gYmul",S.ymul);
   pressGroup("gPair",S.pair);
   pressGroup("gWait",S.wait);
@@ -475,10 +374,17 @@ onGroup("gOpen",function(v){
   if(v==="open"){S.pinfu=false;S.chiitoi=false;}
   else{S.melds.minkanS=0;S.melds.minkanT=0;}
 });
-onGroup("gHan",function(v){
+function setHan(v){
   if(v==="Y"){S.yakuman=true;}
   else{S.yakuman=false;S.han=parseInt(v,10);}
+  hanMore=false;
+}
+document.getElementById("gHan").addEventListener("click",function(e){
+  var b=e.target.closest(".btn"); if(!b) return;
+  if(b.id==="bHanMore") hanMore=!hanMore; else setHan(b.dataset.v);
+  render();
 });
+onGroup("gHanMore",setHan);
 onGroup("gYmul",function(v){S.ymul=parseInt(v,10);});
 onGroup("gPair",function(v){S.pair=parseInt(v,10);});
 onGroup("gWait",function(v){S.wait=parseInt(v,10);});
@@ -501,7 +407,7 @@ toggle("cKiriage",function(){OPT.kiriage=!OPT.kiriage;});
 toggle("cDblWind",function(){OPT.dblWind2=!OPT.dblWind2;});
 
 document.getElementById("bReset").addEventListener("click",function(){
-  S=fresh(); render(); window.scrollTo({top:0,behavior:"smooth"});
+  S=fresh(); hanMore=false; render(); window.scrollTo({top:0,behavior:"smooth"});
 });
 
 render();
