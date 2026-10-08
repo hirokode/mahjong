@@ -14,7 +14,8 @@
   --line:rgba(255,255,255,.1);
   --radius:14px;
 }
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+/* ダブルタップでの拡大を止める（スクロールとピンチ操作は残す） */
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
 html,body{margin:0;padding:0;}
 body{
   background:var(--bg);color:var(--ivory);
