@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#2c5f50">
+<meta name="apple-mobile-web-app-title" content="麻雀">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<title>麻雀 結果</title>
+<link rel="stylesheet" href="app.css">
+<style>
+/* グラフはアイボリーのカード上に描く（系列色はこの面で検証済み） */
+.viz{
+  --surface-1:#f6f2e8;--text-primary:#163a30;--text-secondary:#5b7a6f;--grid:rgba(22,58,48,.1);--axis:rgba(22,58,48,.35);
+  --series-1:#2a78d6;--series-2:#eb6834;--series-3:#1baf7a;--series-4:#eda100;
+  --series-5:#e87ba4;--series-6:#008300;--series-7:#4a3aa7;--series-8:#e34948;--series-other:#8a9c94;
+  background:var(--surface-1);color:var(--text-primary);border-radius:20px;padding:14px 12px 10px;position:relative;
+}
+.legend{display:flex;flex-wrap:wrap;gap:4px 12px;padding:0 4px 8px;}
+.legend span{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;color:var(--text-primary);}
+.legend i{width:14px;height:3px;border-radius:2px;flex:none;}
+.legend b{font-weight:700;color:var(--text-secondary);font-variant-numeric:tabular-nums;}
+#chart{display:block;width:100%;touch-action:pan-y;}
+#chart text{font-family:inherit;font-size:10.5px;fill:var(--text-secondary);font-variant-numeric:tabular-nums;}
+.tip{position:absolute;top:44px;pointer-events:none;background:#fff;border:1px solid rgba(22,58,48,.15);border-radius:10px;
+  padding:7px 10px;font-size:12px;font-weight:700;color:var(--text-primary);min-width:120px;font-variant-numeric:tabular-nums;}
+.tip .tt{font-size:11px;color:var(--text-secondary);margin-bottom:3px;}
+.tip div.r{display:flex;align-items:center;gap:6px;justify-content:space-between;}
+.tip div.r span{display:inline-flex;align-items:center;gap:5px;}
+.tip i{width:10px;height:3px;border-radius:2px;display:inline-block;}
+.vnote{font-size:11px;color:var(--text-secondary);padding:4px 4px 0;}
+.metric{max-width:180px;margin-left:auto;}
+.lblrow{display:flex;align-items:center;gap:8px;margin:0 0 8px;}
+.lblrow .lbl{flex:1;margin:0 0 0 4px;}
+.emptybox{background:var(--surface);border-radius:var(--radius);padding:28px 16px;text-align:center;}
+.emptybox p{margin:0 0 14px;font-size:14px;font-weight:700;color:var(--ivory-dim);}
+.emptybox a{display:inline-flex;align-items:center;min-height:44px;padding:0 20px;border-radius:99px;background:var(--ivory);color:var(--ink);font-size:14px;font-weight:800;text-decoration:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="masthead">
+  <h1>結果</h1>
+  <span class="sub" id="today"></span>
+</div>
+
+<div id="empty" class="hide">
+  <section style="margin-top:8px">
+    <div class="emptybox"><p>まだ記録がありません</p><a href="index_score.html">スコア記録へ</a></div>
+  </section>
+</div>
+
+<div id="main" class="hide">
+  <section style="margin-top:8px">
+    <div class="lblrow">
+      <p class="lbl">総計</p>
+      <div class="seg sm metric hide" id="gMetric">
+        <button class="btn" data-v="yen">円</button>
+        <button class="btn" data-v="pt">ポイント</button>
+      </div>
+    </div>
+    <div class="board" id="board"></div>
+  </section>
+
+  <section>
+    <p class="lbl">累計の推移</p>
+    <div class="viz">
+      <div class="legend" id="legend"></div>
+      <svg id="chart" role="img" aria-label="プレイヤーごとの累計の推移"></svg>
+      <div class="tip hide" id="tip"></div>
+      <p class="vnote" id="vnote"></p>
+    </div>
+  </section>
+
+  <section>
+    <p class="lbl">半荘ごとの結果 <span style="font-weight:600">タップで編集</span></p>
+    <div id="cards"></div>
+  </section>
+</div>
+</div>
+
+<nav class="tabbar" aria-label="画面切り替え">
+  <a href="index_score.html"><svg viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>スコア記録</a>
+  <a href="index_result.html" aria-current="page"><svg viewBox="0 0 24 24"><path d="M4 20h16"/><path d="M5 16l4.5-5 3.5 3 6-7"/></svg>結果</a>
+  <a href="./"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M8.5 7h7M8.5 11.5h.01M12 11.5h.01M15.5 11.5h.01M8.5 15h.01M12 15h.01M15.5 15h.01M8.5 18h.01M12 18h.01M15.5 18h.01"/></svg>点数計算</a>
+</nav>
+
+<script src="score-core.js"></script>
+<script>
+(function(){
+"use strict";
+var $=MJ.$,esc=MJ.esc,r1=MJ.r1,pt=MJ.pt,yen=MJ.yen,press=MJ.press;
+var D=null,metric="pt",model=null;
+var SVGNS="http://www.w3.org/2000/svg";
+
+function fmt(v){return metric==="yen"?yen(v)+"円":pt(v)+"P";}
+function color(k){return k<8?"var(--series-"+(k+1)+")":"var(--series-other)";}
+
+/* 名前ごとの累計を半荘ごとに積み上げる。
+   抜けた人の線はそこで止まり、途中から入った人はその時点の 0 から線が始まる。 */
+function buildModel(){
+  var names=[],idx={},cum={},segs={},last={};
+  D.games.forEach(function(g,gi){
+    var k=gi+1;
+    g.names.forEach(function(n,i){
+      if(idx[n]===undefined){idx[n]=names.length;names.push(n);cum[n]=0;segs[n]=[];}
+      var before=cum[n];
+      cum[n]=r1(cum[n]+(metric==="yen"?g.settle[i]:g.pts[i]));
+      if(last[n]!==k-1) segs[n].push([[k-1,before,true]]);
+      segs[n][segs[n].length-1].push([k,cum[n]]);
+      last[n]=k;
+    });
+  });
+  return {names:names,cum:cum,segs:segs,n:D.games.length};
+}
+function niceStep(range,target){
+  var raw=range/target,p=Math.pow(10,Math.floor(Math.log10(raw))),m=raw/p;
+  return (m<=1?1:m<=2?2:m<=5?5:10)*p;
+}
+function el(tag,attrs,parent){
+  var e=document.createElementNS(SVGNS,tag);
+  for(var a in attrs) e.setAttribute(a,attrs[a]);
+  if(parent) parent.appendChild(e);
+  return e;
+}
+
+var geo=null;
+function drawChart(){
+  model=buildModel();
+  var svg=$("chart");svg.innerHTML="";$("tip").classList.add("hide");
+  var W=svg.parentNode.clientWidth-24,H=230,L=46,R=14,T=10,B=26;
+  svg.setAttribute("viewBox","0 0 "+W+" "+H);svg.setAttribute("height",H);
+
+  var lo=0,hi=0;
+  model.names.forEach(function(n){model.segs[n].forEach(function(s){s.forEach(function(p){lo=Math.min(lo,p[1]);hi=Math.max(hi,p[1]);});});});
+  if(hi===lo){hi+=metric==="yen"?1000:10;lo-=metric==="yen"?1000:10;}
+  var step=niceStep(hi-lo,4);
+  lo=Math.floor(lo/step)*step;hi=Math.ceil(hi/step)*step;
+  var N=Math.max(1,model.n);
+  function x(k){return L+(W-L-R)*k/N;}
+  function y(v){return T+(H-T-B)*(hi-v)/(hi-lo);}
+  geo={x:x,y:y,N:N,L:L,R:R,W:W,H:H,T:T,B:B};
+
+  /* 目盛り（控えめな格子、0 だけ濃く） */
+  for(var v=lo;v<=hi+step/2;v+=step){
+    var yy=y(v),zero=Math.abs(v)<step/1000;
+    el("line",{x1:L,x2:W-R,y1:yy,y2:yy,stroke:zero?"var(--axis)":"var(--grid)","stroke-width":1},svg);
+    var t=el("text",{x:L-6,y:yy+3.5,"text-anchor":"end"},svg);
+    t.textContent=metric==="yen"?(Math.abs(v)>=1000?(v/1000)+"k":String(v)):String(v);
+  }
+  var every=Math.max(1,Math.ceil(N/8));
+  for(var k=0;k<=N;k++){
+    if(k%every!==0&&k!==N) continue;
+    var tx=el("text",{x:x(k),y:H-8,"text-anchor":"middle"},svg);
+    tx.textContent=k===0?"開始":k;
+  }
+
+  /* 系列 */
+  model.names.forEach(function(n,si){
+    model.segs[n].forEach(function(s){
+      var d=s.map(function(p,j){return (j?"L":"M")+x(p[0]).toFixed(1)+" "+y(p[1]).toFixed(1);}).join("");
+      el("path",{d:d,fill:"none",stroke:color(si),"stroke-width":2,"stroke-linejoin":"round","stroke-linecap":"round"},svg);
+      var e=s[s.length-1];
+      el("circle",{cx:x(e[0]),cy:y(e[1]),r:4,fill:color(si),stroke:"var(--surface-1)","stroke-width":2},svg);
+    });
+  });
+  el("line",{id:"cross",x1:0,x2:0,y1:T,y2:H-B,stroke:"var(--axis)","stroke-width":1,visibility:"hidden"},svg);
+
+  var lg="";
+  model.names.forEach(function(n,si){
+    lg+='<span><i style="background:'+color(si)+'"></i>'+esc(n)+' <b>'+fmt(model.cum[n])+'</b></span>';
+  });
+  $("legend").innerHTML=lg;
+  $("vnote").textContent=(metric==="yen"?"収支（場代は含まない）":"ポイント")+"の累計。グラフをタップすると各半荘の値を表示します。";
+}
+
+/* タップ／なぞった位置の半荘の値を表示 */
+function valueAt(n,k){
+  var segs=model.segs[n];
+  /* 線の起点（その半荘にはまだ参加していない）は、開始時以外は表示しない */
+  for(var i=0;i<segs.length;i++) for(var j=0;j<segs[i].length;j++){
+    var q=segs[i][j];
+    if(q[0]===k&&(!q[2]||k===0)) return q[1];
+  }
+  return null;
+}
+function showTip(clientX){
+  var svg=$("chart"),box=svg.getBoundingClientRect();
+  var px=(clientX-box.left)*geo.W/box.width;
+  var k=Math.round((px-geo.L)/(geo.W-geo.L-geo.R)*geo.N);
+  k=Math.max(0,Math.min(geo.N,k));
+  var cross=$("cross");
+  cross.setAttribute("x1",geo.x(k));cross.setAttribute("x2",geo.x(k));cross.setAttribute("visibility","visible");
+  var h='<div class="tt">'+(k===0?"開始時":"第"+k+"半荘終了時")+'</div>',any=false;
+  model.names.map(function(n,si){return {n:n,si:si,v:valueAt(n,k)};})
+    .filter(function(o){return o.v!==null;})
+    .sort(function(a,b){return b.v-a.v;})
+    .forEach(function(o){any=true;h+='<div class="r"><span><i style="background:'+color(o.si)+'"></i>'+esc(o.n)+'</span>'+fmt(o.v)+'</div>';});
+  var tip=$("tip");
+  if(!any){tip.classList.add("hide");return;}
+  tip.innerHTML=h;tip.classList.remove("hide");
+  var vizBox=svg.parentNode.getBoundingClientRect(),cx=box.left-vizBox.left+geo.x(k)*box.width/geo.W;
+  var w=tip.offsetWidth,left=cx+12;
+  if(left+w>vizBox.width-8) left=cx-12-w;
+  tip.style.left=Math.max(8,left)+"px";
+  tip.style.top=(svg.offsetTop+4)+"px";
+}
+function hideTip(){$("tip").classList.add("hide");var c=$("cross");if(c)c.setAttribute("visibility","hidden");}
+$("chart").addEventListener("pointerdown",function(e){showTip(e.clientX);});
+$("chart").addEventListener("pointermove",function(e){if(e.pointerType==="mouse"||e.buttons)showTip(e.clientX);});
+$("chart").addEventListener("pointerleave",function(e){if(e.pointerType==="mouse")hideTip();});
+document.addEventListener("pointerdown",function(e){if(!e.target.closest("#chart"))hideTip();});
+
+function render(){
+  D=MJ.load();
+  var ready=MJ.isReady(D)&&D.games.length>0;
+  $("empty").classList.toggle("hide",ready);
+  $("main").classList.toggle("hide",!ready);
+  $("today").textContent=MJ.isReady(D)?D.date:"";
+  if(!ready) return;
+  var money=MJ.hasMoney(D);
+  if(!money) metric="pt";
+  $("gMetric").classList.toggle("hide",!money);
+  press("gMetric",metric);
+  $("board").innerHTML=MJ.boardHTML(D,"総計");
+  drawChart();
+  var h="";
+  D.games.forEach(function(g,i){h+=MJ.gameCardHTML(g,i);});
+  $("cards").innerHTML=h;
+}
+$("gMetric").addEventListener("click",function(e){
+  var b=e.target.closest(".btn");if(!b)return;
+  metric=b.dataset.v;press("gMetric",metric);drawChart();
+});
+$("cards").addEventListener("click",function(e){
+  var row=e.target.closest(".hrow");if(!row)return;
+  MJ.openEdit(D,+row.dataset.i,render);
+});
+var rt=null;
+window.addEventListener("resize",function(){clearTimeout(rt);rt=setTimeout(function(){if(model)drawChart();},150);});
+/* 他の画面で編集された内容を反映 */
+window.addEventListener("pageshow",function(){render();});
+window.addEventListener("storage",function(){render();});
+
+(function init(){
+  var d=MJ.load();
+  metric=(MJ.isReady(d)&&MJ.hasMoney(d))?"yen":"pt";
+  render();
+})();
+})();
+</script>
+</body>
+</html>

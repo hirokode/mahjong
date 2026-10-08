@@ -1,9 +1,10 @@
-/* ===== 共通スタイル（点数計算・スコア記録） ===== */
+/* ===== 共通スタイル（スコア記録・結果・点数計算） ===== */
 :root{
-  --bg:#1e473c;
+  --bg:#2c5f50;
+  --bg-fade:rgba(44,95,80,0);
   --surface:rgba(255,255,255,.07);
   --surface-2:rgba(255,255,255,.12);
-  --field:rgba(0,0,0,.16);
+  --field:rgba(0,0,0,.14);
   --ivory:#f6f2e8;
   --ivory-dim:rgba(246,242,232,.62);
   --ink:#163a30;
@@ -89,10 +90,93 @@ details[open] summary::after{transform:rotate(-135deg);}
 }
 .tabbar a{
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
-  min-width:104px;padding:7px 18px 6px;border-radius:999px;
+  min-width:92px;padding:7px 12px 6px;border-radius:999px;
   color:#24302c;text-decoration:none;font-size:11.5px;font-weight:700;letter-spacing:.02em;
 }
 .tabbar a svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
-.tabbar a[aria-current="page"]{background:rgba(30,71,60,.12);color:var(--ink);}
+.tabbar a[aria-current="page"]{background:rgba(44,95,80,.14);color:var(--ink);}
+
+/* ---- ボタン・入力 ---- */
+.primary{
+  width:100%;min-height:56px;border:0;border-radius:var(--radius);background:var(--jade);color:#0c2a1f;
+  font-family:inherit;font-size:17px;font-weight:800;letter-spacing:.04em;cursor:pointer;transition:opacity .12s,background .12s;
+}
+.primary:active{opacity:.85;}
+.primary:disabled{background:var(--surface);color:rgba(246,242,232,.4);cursor:not-allowed;}
+.ghost{
+  width:100%;min-height:50px;border:0;border-radius:var(--radius);background:var(--surface);
+  color:var(--ivory);font-family:inherit;font-size:14.5px;font-weight:700;cursor:pointer;
+}
+.ghost:active{background:var(--surface-2);}
+.ghost.danger{color:#ff8a7e;background:transparent;}
+.ghost.danger:active{background:var(--surface);}
+.tlink{flex:none;min-height:34px;padding:0 13px;border:0;border-radius:99px;background:var(--surface-2);color:var(--ivory);
+  font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap;}
+.tlink[aria-expanded="true"]{background:var(--ivory);color:var(--ink);}
+
+input[type=text],input[type=number]{
+  width:100%;min-height:52px;padding:0 14px;border:1.5px solid transparent;border-radius:12px;
+  background:var(--field);color:var(--ivory);font-family:inherit;font-size:17px;font-weight:700;
+  font-variant-numeric:tabular-nums;
+}
+input:focus{outline:none;border-color:var(--gold);}
+input::placeholder{color:rgba(246,242,232,.34);font-weight:600;}
+.frow{margin-bottom:12px;}
+.frow > span{display:block;font-size:12.5px;font-weight:700;color:var(--ivory-dim);margin:0 0 6px 4px;}
+
+.pscore{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.pscore .pn{width:82px;flex:none;font-size:16px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pscore input{text-align:right;font-size:20px;}
+.sumbar{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:700;padding:6px 4px 0;font-variant-numeric:tabular-nums;color:var(--ivory-dim);}
+.ok{color:#7fe0b0;}.ng{color:var(--gold);}
+.err{color:#ff8a7e;font-size:13px;font-weight:700;padding:9px 4px 0;}
+
+/* ---- 成績ボード（アイボリーのカード） ---- */
+.board{background:var(--ivory);color:var(--ink);border-radius:20px;padding:14px 16px 12px;}
+.board .bh{display:flex;justify-content:space-between;gap:8px;font-size:12px;font-weight:700;color:#5b7a6f;padding-bottom:8px;border-bottom:1px solid rgba(22,58,48,.12);}
+.brow{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(22,58,48,.08);}
+.brow:last-child{border-bottom:0;}
+.brow .rk{width:22px;flex:none;font-size:13px;font-weight:800;color:#8a9c94;text-align:center;}
+.brow .rk.top{color:#b8862c;}
+.brow .nm{flex:1;min-width:0;font-size:17px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.brow .nm small{display:block;font-size:11px;font-weight:600;color:#7d9188;}
+.brow .vals{text-align:right;font-variant-numeric:tabular-nums;}
+.brow .pt{font-size:19px;font-weight:800;line-height:1.15;}
+.brow .yen{font-size:12.5px;font-weight:700;color:#5b7a6f;}
+.plus{color:#1f7a52;}.minus{color:#c0392b;}
+.board .bf{font-size:11.5px;color:#5b7a6f;font-weight:600;padding-top:9px;text-align:center;}
+.board .empty{padding:22px 0;text-align:center;font-size:14px;font-weight:700;color:#7d9188;}
+
+/* ---- ルール表示（小さなタグ） ---- */
+.rtags{display:flex;flex-wrap:wrap;gap:5px;}
+.rtag{display:inline-flex;align-items:baseline;gap:4px;padding:3px 9px;border-radius:99px;
+  background:var(--surface-2);font-size:12px;font-weight:700;color:var(--ivory);line-height:1.5;white-space:nowrap;}
+.rtag i{font-style:normal;font-size:10.5px;font-weight:600;color:var(--ivory-dim);}
+.rtag.rate{background:rgba(232,188,104,.22);color:#ffe2a8;}
+.rtag.rate i{color:rgba(255,226,168,.75);}
+
+/* ---- 半荘カード ---- */
+.hrow{display:block;padding:12px;margin-bottom:8px;cursor:pointer;border-radius:var(--radius);background:var(--surface);}
+.hrow:active{background:var(--surface-2);}
+.htop{display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap;}
+.hn{font-size:12px;font-weight:700;color:var(--ivory-dim);font-variant-numeric:tabular-nums;}
+.hg{margin-left:auto;font-size:17px;color:rgba(246,242,232,.4);}
+.hc{display:grid;gap:6px;}
+.hp{text-align:center;background:var(--field);border-radius:10px;padding:7px 4px;min-width:0;}
+.hpn{display:block;font-size:11px;font-weight:700;color:var(--ivory-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.hpp{display:block;font-size:16px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.25;}
+.hpy{display:block;font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;opacity:.72;}
+.hpp.up{color:#8ff0bd;}.hpp.down{color:#ffa196;}
+.hbadge{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:99px;
+  background:rgba(232,188,104,.2);color:#ffe2a8;}
+
+/* ---- モーダル・通知 ---- */
+.modal{position:fixed;inset:0;background:rgba(8,22,18,.6);z-index:50;overflow-y:auto;padding:calc(20px + env(safe-area-inset-top)) 16px calc(40px + env(safe-area-inset-bottom));}
+.msheet{max-width:520px;margin:0 auto;background:var(--bg);border-radius:22px;padding:18px 16px;}
+.msheet h3{margin:0 0 14px;font-size:18px;font-weight:800;}
+.toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(14px);
+  background:var(--ivory);color:var(--ink);padding:11px 20px;border-radius:99px;font-size:14px;font-weight:800;
+  opacity:0;pointer-events:none;transition:all .22s;z-index:60;max-width:calc(100% - 32px);text-align:center;}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
 
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;}}
