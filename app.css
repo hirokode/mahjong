@@ -175,6 +175,9 @@ input::placeholder{color:rgba(246,242,232,.34);font-weight:600;}
 .modal{position:fixed;inset:0;background:rgba(8,22,18,.6);z-index:50;overflow-y:auto;padding:calc(20px + env(safe-area-inset-top)) 16px calc(40px + env(safe-area-inset-bottom));}
 .msheet{max-width:520px;margin:0 auto;background:var(--bg);border-radius:22px;padding:18px 16px;}
 .msheet h3{margin:0 0 14px;font-size:18px;font-weight:800;}
+#modal .chips{gap:5px;margin-top:6px;}
+#modal .chips .btn{min-height:34px;padding:2px 11px;font-size:13px;gap:4px;}
+#modal .chips .btn small{font-size:10.5px;}
 .toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(14px);
   background:var(--ivory);color:var(--ink);padding:11px 20px;border-radius:99px;font-size:14px;font-weight:800;
   opacity:0;pointer-events:none;transition:all .22s;z-index:60;max-width:calc(100% - 32px);text-align:center;}

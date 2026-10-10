@@ -38,6 +38,24 @@ MJ.load=function(){
 };
 MJ.isReady=function(d){return !!(d&&d.players&&d.rule&&d.presets&&d.games);};
 
+/* ===== 既定プリセット（レート・トビ賞・ウマ・原点） ===== */
+MJ.P_RATE=[["ノーレート",0],["テンイチ",10],["テンニ",20],["テンサン",30],["テンヨン",40],
+           ["テンゴ",50],["テンロク",60],["テンナナ",70],["テンハチ",80],["テンキュウ",90],
+           ["テンピン",100],["リャンピン",200]];
+MJ.P_TOBI=[["なし",0],["5",5],["10",10],["20",20]];
+MJ.P_UMA={
+  2:[["なし",[0,0]],["10-10",[10,-10]],["20-20",[20,-20]],["30-30",[30,-30]]],
+  3:[["なし",[0,0,0]],["10-0-10",[10,0,-10]],["20-0-20",[20,0,-20]],["30-0-30",[30,0,-30]],
+     ["10-5-15",[10,5,-15]],["20-10-30",[20,10,-30]],["30-10-40",[30,10,-40]]],
+  4:[["なし",[0,0,0,0]],["10-5-5-10",[10,5,-5,-10]],["20-10-10-20",[20,10,-10,-20]],
+     ["30-10-10-30",[30,10,-10,-30]],["10-20-20-10",[10,20,-20,-10]]]
+};
+MJ.DEF={2:{start:30000,ret:30000},3:{start:35000,ret:40000},4:{start:25000,ret:30000}};
+function pick(list){return list.map(function(x){return [x[0],x[1]];});}
+MJ.allRate=function(pr){return MJ.P_RATE.concat(pick(pr.rate));};
+MJ.allTobi=function(pr){return MJ.P_TOBI.concat(pick(pr.tobi));};
+MJ.allUma=function(pr,n){return MJ.P_UMA[n].concat(pick(pr.uma[n]||[]));};
+
 /* ===== 1半荘の計算 ===== */
 MJ.calcGame=function(scores,shooterIdx,rule,names){
   var n=scores.length;
@@ -172,7 +190,7 @@ MJ.gameCardHTML=function(g,i){
 };
 
 /* ===== 半荘の編集（モーダル） ===== */
-var ed={D:null,i:-1,shooter:null,done:null};
+var ed={D:null,i:-1,shooter:null,done:null,rule:null};
 function ensureModal(){
   if($("modal")) return;
   var m=document.createElement("div");
@@ -183,7 +201,21 @@ function ensureModal(){
     '<div class="sumbar"><span>素点合計</span><span id="mSum">—</span></div>'+
     '<div style="margin-top:15px"><p class="lbl">飛ばした人</p><div class="seg sm" id="mShooter"></div></div>'+
     '<div class="frow" style="margin-top:15px"><span>メモ</span><input type="text" id="mMemo" placeholder="任意"></div>'+
+    '<div class="lblrow" style="display:flex;align-items:center;gap:8px;margin:4px 0 8px">'+
+      '<p class="lbl" style="flex:1;margin:0 0 0 4px">この半荘のルール</p>'+
+      '<button class="tlink hide" id="mRuleNow">今の設定に合わせる</button>'+
+      '<button class="tlink" id="mRuleEdit" aria-expanded="false">変更</button>'+
+    '</div>'+
     '<div id="mRule"></div>'+
+    '<div class="hide" id="mRuleBox" style="margin-top:6px">'+
+      '<p class="lbl" style="margin:12px 0 0 4px">レート</p><div class="chips" id="mRate"></div>'+
+      '<p class="lbl" style="margin:12px 0 0 4px">ウマ</p><div class="chips" id="mUma"></div>'+
+      '<p class="lbl" style="margin:12px 0 0 4px">トビ賞</p><div class="chips" id="mTobi"></div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">'+
+        '<div class="frow"><span>配給原点</span><input type="number" inputmode="numeric" id="mStart"></div>'+
+        '<div class="frow"><span>返し点</span><input type="number" inputmode="numeric" id="mRet"></div>'+
+      '</div>'+
+    '</div>'+
     '<div class="err hide" id="mErr"></div>'+
     '<button class="primary" id="mSave" style="margin-top:14px">更新する</button>'+
     '<button class="ghost" id="mCancel" style="margin-top:9px">キャンセル</button>'+
@@ -195,8 +227,36 @@ function ensureModal(){
     ed.shooter=b.dataset.v==="none"?null:+b.dataset.v;
     press("mShooter",b.dataset.v);validate();
   });
+  $("mRuleEdit").addEventListener("click",function(){
+    var open=$("mRuleBox").classList.toggle("hide")===false;
+    this.setAttribute("aria-expanded",open?"true":"false");
+  });
+  $("mRuleNow").addEventListener("click",function(){
+    ed.rule=JSON.parse(JSON.stringify(ed.D.rule));renderRule();validate();toast("今の設定に合わせました");
+  });
+  function onChip(kind){
+    return function(e){
+      var b=e.target.closest(".btn");if(!b)return;
+      var n=ed.D.games[ed.i].names.length,pr=ed.D.presets;
+      if(kind==="rate"){var r=MJ.allRate(pr)[+b.dataset.k];ed.rule.rateLabel=r[0];ed.rule.yen=r[1];}
+      if(kind==="uma"){var u=MJ.allUma(pr,n)[+b.dataset.k];ed.rule.umaLabel=u[0];ed.rule.uma=u[1].slice();}
+      if(kind==="tobi"){var t=MJ.allTobi(pr)[+b.dataset.k];ed.rule.tobiLabel=t[0];ed.rule.tobiPoint=t[1];}
+      renderRule();validate();
+    };
+  }
+  $("mRate").addEventListener("click",onChip("rate"));
+  $("mUma").addEventListener("click",onChip("uma"));
+  $("mTobi").addEventListener("click",onChip("tobi"));
+  ["mStart","mRet"].forEach(function(id){
+    $(id).addEventListener("input",function(){
+      var v=Number(this.value);
+      if(this.value===""||!Number.isFinite(v)) return;
+      ed.rule[id==="mStart"?"start":"ret"]=v;
+      $("mRule").innerHTML=MJ.ruleTags(ed.rule,ed.D.games[ed.i].names.length);validate();
+    });
+  });
   $("mSave").addEventListener("click",function(){
-    var g=ed.D.games[ed.i],res=MJ.calcGame(read(),ed.shooter,g.rule,g.names);
+    var g=ed.D.games[ed.i],res=MJ.calcGame(read(),ed.shooter,ed.rule,g.names);
     if(res.error){toast(res.error);return;}
     res.memo=$("mMemo").value.trim();
     ed.D.games[ed.i]=res;MJ.save(ed.D);close();
@@ -208,6 +268,19 @@ function ensureModal(){
     ed.D.games.splice(ed.i,1);MJ.save(ed.D);close();toast("削除しました");
   });
 }
+function chipsHTML(list,label,sub){
+  return list.map(function(x,k){
+    return '<button class="btn" data-k="'+k+'" aria-pressed="'+(x[0]===label)+'">'+esc(x[0])+(sub?'<small>'+sub(x)+'</small>':'')+'</button>';
+  }).join("");
+}
+function renderRule(){
+  var n=ed.D.games[ed.i].names.length,pr=ed.D.presets,r=ed.rule;
+  $("mRule").innerHTML=MJ.ruleTags(r,n);
+  $("mRate").innerHTML=chipsHTML(MJ.allRate(pr),r.rateLabel,function(x){return (x[1]||0)+"円";});
+  $("mUma").innerHTML=chipsHTML(MJ.allUma(pr,n),r.umaLabel);
+  $("mTobi").innerHTML=chipsHTML(MJ.allTobi(pr),r.tobiLabel,function(x){return x[1]+"P";});
+  $("mStart").value=r.start;$("mRet").value=r.ret;
+}
 function close(){$("modal").classList.add("hide");if(ed.done)ed.done();}
 function read(){
   var v=[];document.querySelectorAll("#mScores input").forEach(function(el){v.push(el.value===""?null:Number(el.value));});
@@ -215,7 +288,7 @@ function read(){
 }
 function validate(){
   var g=ed.D.games[ed.i],v=read();
-  var need=g.rule.start*v.length,blanks=v.filter(function(x){return x===null;}).length;
+  var need=ed.rule.start*v.length,blanks=v.filter(function(x){return x===null;}).length;
   var filled=v.reduce(function(a,b){return a+(b||0);},0);
   var el=$("mSum");
   if(blanks>0){el.innerHTML='<span class="ng">未入力あり</span>';}
@@ -223,7 +296,7 @@ function validate(){
   else{el.innerHTML='<span class="ng">'+filled.toLocaleString()+'（差 '+(filled-need>0?"+":"")+(filled-need).toLocaleString()+'）</span>';}
   var e=$("mErr");e.classList.add("hide");
   if(blanks>0){$("mSave").disabled=true;return;}
-  var res=MJ.calcGame(v,ed.shooter,g.rule,g.names);
+  var res=MJ.calcGame(v,ed.shooter,ed.rule,g.names);
   if(res.error){e.textContent=res.error;e.classList.remove("hide");$("mSave").disabled=true;return;}
   $("mSave").disabled=false;
 }
@@ -231,6 +304,7 @@ MJ.openEdit=function(D,i,done){
   ensureModal();
   ed.D=D;ed.i=i;ed.done=done;
   var g=D.games[i];
+  ed.rule=JSON.parse(JSON.stringify(g.rule));
   $("mTitle").textContent="第"+(i+1)+"半荘の編集";
   var h="";
   g.names.forEach(function(n,k){
@@ -244,7 +318,9 @@ MJ.openEdit=function(D,i,done){
   ed.shooter=(g.shooter===null||g.shooter===undefined)?null:g.shooter;
   press("mShooter",ed.shooter===null?"none":ed.shooter);
   $("mMemo").value=g.memo||"";
-  $("mRule").innerHTML='<p class="lbl" style="margin-top:4px">登録時のルール</p>'+MJ.ruleTags(g.rule,g.names.length);
+  renderRule();
+  $("mRuleBox").classList.add("hide");$("mRuleEdit").setAttribute("aria-expanded","false");
+  $("mRuleNow").classList.toggle("hide",!(D.rule&&D.players.length===g.names.length));
   $("modal").classList.remove("hide");validate();
 };
 
